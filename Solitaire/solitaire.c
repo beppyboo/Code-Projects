@@ -8,6 +8,8 @@
  ******************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 enum
 {
@@ -34,38 +36,51 @@ enum
   RANK_K,
 };
 
-struct card
+typedef struct Card
 {
   int suit;
   int rank;
-};
+} Card;
 
-int isBlack(struct card c);
-int isRed(struct card c);
-int isOtherColor(struct card first, struct card second);
-int isNextRank(struct card higher, struct card lower);
-int canBePlacedOnTableau(struct card parent, struct card child);
-int isSameSuit(struct card first, struct card second);
-int canBePlacedOnFoundation(struct card parent, struct card child);
-char suitf();
-char rankf();
+// Card Checks
+int isBlack(Card c);
+int isRed(Card c);
+int isOtherColor(Card first, Card second);
+int isNextRank(Card higher, Card lower);
+int canBePlacedTableau(Card parent, Card child);
+int isSameSuit(Card first, Card second);
+int canBePlacedFoundation(Card parent, Card child);
 
-struct card initializeCard(int s, int r);
-void initializeDeck(struct card *deck);
+// Printing
+char *suitf();
+char *rankf();
+void printCard(Card c);
 
-void printCard(struct card c)
-{
-  printf("%c%c", suitf(c), rankf(c));
-}
+// Deck Manipulation
+Card initializeCard(int s, int r);
+void initializeDeck(Card *deck);
+void shuffleDeck(Card *deck);
 
+// -----------------------------------------------------------------------------
 int main(void)
 {
-  struct card cAC = {SUIT_DIAMOND, RANK_A};
+  Card deck[52];
+  initializeDeck(deck);
+  shuffleDeck(deck);
 
-  printf("Card is black: %i", RANK_5);
+  for (int i = 0; i < 52; i++)
+  {
+    printCard(deck[i]);
+    printf(" ");
+    if (i % 4 == 3)
+    {
+      printf("\n");
+    }
+  }
 
   return 0;
 }
+// -----------------------------------------------------------------------------
 
 /*******************************************************************************
  * @brief  Determines if the card is black.
@@ -73,7 +88,7 @@ int main(void)
  * @param  c
  * @return int
  *******************************************************************************/
-int isBlack(struct card c)
+int isBlack(Card c)
 {
   return c.suit == SUIT_CLUB || c.suit == SUIT_SPADE;
 }
@@ -84,7 +99,7 @@ int isBlack(struct card c)
  * @param  c
  * @return int
  *******************************************************************************/
-int isRed(struct card c)
+int isRed(Card c)
 {
   return c.suit == SUIT_HEART || c.suit == SUIT_DIAMOND;
 }
@@ -96,7 +111,7 @@ int isRed(struct card c)
  * @param  second
  * @return int
  *******************************************************************************/
-int isOtherColor(struct card first, struct card second)
+int isOtherColor(Card first, Card second)
 {
   return isBlack(first) != isBlack(second);
 }
@@ -108,7 +123,7 @@ int isOtherColor(struct card first, struct card second)
  * @param  lower
  * @return int
  *******************************************************************************/
-int isNextRank(struct card higher, struct card lower)
+int isNextRank(Card higher, Card lower)
 {
   return higher.rank == lower.rank + 1;
 }
@@ -121,7 +136,7 @@ int isNextRank(struct card higher, struct card lower)
  * @param  child
  * @return int
  *******************************************************************************/
-int canBePlacedOnTableau(struct card parent, struct card child)
+int canBePlacedTableau(Card parent, Card child)
 {
   return isOtherColor(parent, child) && isNextRank(parent, child);
 }
@@ -133,7 +148,7 @@ int canBePlacedOnTableau(struct card parent, struct card child)
  * @param  second
  * @return int
  *******************************************************************************/
-int isSameSuit(struct card first, struct card second)
+int isSameSuit(Card first, Card second)
 {
   return first.suit == second.suit;
 }
@@ -146,21 +161,103 @@ int isSameSuit(struct card first, struct card second)
  * @param  child
  * @return int
  *******************************************************************************/
-int canBePlacedOnFoundation(struct card parent, struct card child)
+int canBePlacedFoundation(Card parent, Card child)
 {
   return isSameSuit(parent, child) && isNextRank(child, parent);
 }
 
-struct card initializeCard(int s, int r)
+/*******************************************************************************
+ * @brief  Returns a symbol representing the suit of a card.
+ *
+ * @param  c
+ * @return char
+ *******************************************************************************/
+char *suitf(Card c)
 {
-  struct card c =
+  switch (c.suit)
+  {
+  case SUIT_CLUB:
+    return "\u2663";
+  case SUIT_HEART:
+    return "\u2665";
+  case SUIT_SPADE:
+    return "\u2660";
+  case SUIT_DIAMOND:
+    return "\u2666";
+  }
+}
+
+/*******************************************************************************
+ * @brief  Returns a symbol representing the rank of a card.
+ *
+ * @param  c
+ * @return char
+ *******************************************************************************/
+char *rankf(Card c)
+{
+  switch (c.rank)
+  {
+  case RANK_A:
+    return "A";
+  case RANK_2:
+    return "2";
+  case RANK_3:
+    return "3";
+  case RANK_4:
+    return "4";
+  case RANK_5:
+    return "5";
+  case RANK_6:
+    return "6";
+  case RANK_7:
+    return "7";
+  case RANK_8:
+    return "8";
+  case RANK_9:
+    return "9";
+  case RANK_10:
+    return "10";
+  case RANK_J:
+    return "J";
+  case RANK_Q:
+    return "Q";
+  case RANK_K:
+    return "K";
+  }
+}
+
+/*******************************************************************************
+ * @brief  Prints the symbols that represent a card.
+ *
+ * @param  c
+ *******************************************************************************/
+void printCard(Card c)
+{
+  printf("%2s%s", rankf(c), suitf(c));
+}
+
+/*******************************************************************************
+ * @brief  Initializes a card struct with a suit and rank.
+ *
+ * @param  s
+ * @param  r
+ * @return Card
+ *******************************************************************************/
+Card initializeCard(int s, int r)
+{
+  Card c =
       {
           s,
           r};
   return c;
 }
 
-void initializeDeck(struct card *deck)
+/*******************************************************************************
+ * @brief  Initializes a deck of 52 cards.
+ *
+ * @param  deck
+ *******************************************************************************/
+void initializeDeck(Card *deck)
 {
   for (int i = 0; i < 52; i++)
   {
@@ -168,48 +265,14 @@ void initializeDeck(struct card *deck)
   }
 }
 
-char suitf(struct card c)
+void shuffleDeck(Card *deck)
 {
-  int s = c.suit;
-  if (s == 0)
+  for (int i = 51; i > 0; i--)
   {
-    return '♣';
-  }
-  else if (s == 1)
-  {
-    return '♥';
-  }
-  else if (s == 2)
-  {
-    return '♠';
-  }
-  else
-  {
-    return '♦';
-  }
-}
-
-char rankf(struct card c)
-{
-  int r = c.rank;
-  if (r == 0)
-  {
-    return 'A';
-  }
-  else if (r == 11)
-  {
-    return 'J';
-  }
-  else if (r == 12)
-  {
-    return 'Q';
-  }
-  else if (r == 13)
-  {
-    return 'K';
-  }
-  else
-  {
-    return r + 49;
+    srand(time(NULL));
+    int j = rand() % (i + 1);
+    Card temp = deck[i];
+    deck[i] = deck[j];
+    deck[j] = temp;
   }
 }
